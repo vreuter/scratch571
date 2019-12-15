@@ -8,7 +8,7 @@ object InteractiveAmmoniteSession {
   import cats._, cats.implicits._
   val thisJarFile = new File(s"${System.getenv("CODE")}/scratch571/target/scala-2.12/flybrain571_v0.0.1-SNAPSHOT.jar")
   interp.load.cp(ammonite.ops.Path(thisJarFile))
-  import flybrain571.{ Preamble, Refinement }
+  import flybrain571._
   interp.load.ivy("org.typelevel" % "mouse_2.12" % "0.23")
   import mouse.boolean._
   import flybrain571.DataPaths.{ findAllByExtension => findByExt }
@@ -24,19 +24,25 @@ object InteractiveAmmoniteSession {
   def folderFromEnvVar = pathFromEnvVar((_: File).isDirectory)
   def fileFromEnvVar = pathFromEnvVar((_: File).isFile)
 
+  def unsafe[A, B](f: A => Either[String, B]): A => B = a => f(a).fold(msg => throw new Exception(msg), identity _)
+
   val genomesEnvVar = "GENOMES"
-  val genomeFolder = folderFromEnvVar(genomesEnvVar).fold(errMsg => throw new Exception(errMsg), identity _)
+  val genomeFolder = unsafe(folderFromEnvVar)(genomesEnvVar)
   val assembly = "dm6"
   val gtfName = "Drosophila_melanogaster.BDGP6.22.98.chr.gtf"
   val gtfPath = new File(Paths.get(genomeFolder.getPath, assembly, gtfName).toString)
   if (!gtfPath.isFile) { throw new Exception(s"Missing GTF: $gtfPath") }
 
   val dataEnvVar = "DATA"
-  val dataFolder = folderFromEnvVar(dataEnvVar).fold(errMsg => throw new Exception(errMsg), identity _)
+  val dataFolder = unsafe(folderFromEnvVar)(dataEnvVar)
   val allDataFiles = findByExt(Preamble.readsFileExt)(new File(dataFolder, "BoniniLab"))
   val fileByID = allDataFiles.map(f => {
     val xf = Refinement.ExtantFile.unsafe(new File(f))
-    Preamble.idFromFile(xf) -> xf
+    unsafe(Preamble.idFromFile)(xf) -> xf
   })
+  val (neFiles, ssFiles) = fileByID partition { case (id, f) => id.antibody match {
+    case _: Nebl => true
+    case _: SynSys => false
+  } }
 
 }
