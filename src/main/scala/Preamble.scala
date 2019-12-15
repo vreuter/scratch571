@@ -13,10 +13,7 @@ object Preamble extends LazyLogging {
   import mouse.boolean._
   import MeTPeakProgram.{ ProgramInstance => MPP }
   import Refinement._, ExtantFile._
-  
-  val neblAlias = "NEB_Antibody"
-  val synSysAlias = "SynapticSystems_Antibody"
-  
+
   // TODO: GTF for dm6 + possibly annotations
   private[this] val readsFileExt = ".sort.bam"
   private[this] val repNameIndex = 0
@@ -28,17 +25,18 @@ object Preamble extends LazyLogging {
 
   /** Display a {@code SampleID} as text. */
   implicit val showSampleID: Show[SampleID] = new Show[SampleID] {
-    def show(sid: SampleID): String = sid match { case SampleID(ab, mark, shock, rep) => {
-      ???
-    } }
+    def show(sid: SampleID): String = sid match {
+      case SampleID(ab, mark, shock, rep) => {
+        // TODO: fill out the fields.
+        //val fields = List(s"${repPrefix}${rep.value}", ab.show, )
+        //s"${repPrefix}${rep.value}"
+        ???
+      }
+    }
   }
 
   /** Convert a {@code SampleID} to a filepath. */
-  def id2File: SampleID => File = _ match { case SampleID(ab, mark, shock, rep) => {
-    //val fields = List(s"${repPrefix}${rep.value}", )
-    //s"${repPrefix}${rep.value}"
-    ???
-  } }
+  def id2File: SampleID => File = sid => new File(s"${showSampleID.show(sid)}${readsFileExt}")
 
   /**
    * Attempt parse of a {@code SampleID} from a filepath.
