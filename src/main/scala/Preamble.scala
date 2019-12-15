@@ -9,22 +9,58 @@ import com.typesafe.scalalogging.LazyLogging
  */
 object Preamble extends LazyLogging {
   import java.io.File
+  import cats._
+  import mouse.boolean._
   import MeTPeakProgram.{ ProgramInstance => MPP }
-  import Refinement._
+  import Refinement._, ExtantFile._
+  
   val neblAlias = "NEB_Antibody"
   val synSysAlias = "SynapticSystems_Antibody"
-  // TODO: *.sort.bam
+  
   // TODO: GTF for dm6 + possibly annotations
-  val readsFileExt = ".sort.bam"
-  //private[this] val rawProgPath = new File(getClass().getResource("/runMetpeak.R").toString)
-  //logger.info(s"Program path: $rawProgPath")
-  //private[this] val progPath = ExtantFile.unsafe(rawProgPath)
-  //val mpProg = MPP(progPath)
+  private[this] val readsFileExt = ".sort.bam"
+  private[this] val repNameIndex = 0
+  private[this] val ipNameIndex = 1
+  private[this] val markerNameIndex = 2
+  private[this] val repPrefix = "Rep"
+  
   val mpProg = MPP()
 
-  def identityFromFile(f: ExtantFile): Either[String, SampleID] = {
-    val fn = f.value.getName
+  /** Display a {@code SampleID} as text. */
+  implicit val showSampleID: Show[SampleID] = new Show[SampleID] {
+    def show(sid: SampleID): String = sid match { case SampleID(ab, mark, shock, rep) => {
+      ???
+    } }
+  }
+
+  /** Convert a {@code SampleID} to a filepath. */
+  def id2File: SampleID => File = _ match { case SampleID(ab, mark, shock, rep) => {
+    //val fields = List(s"${repPrefix}${rep.value}", )
+    //s"${repPrefix}${rep.value}"
     ???
+  } }
+
+  /**
+   * Attempt parse of a {@code SampleID} from a filepath.
+   *
+   * @param f The filepath from which to parse/infer sample ID
+   * @return Either a {@code Left} containing an error message, or a {@code Right} containing 
+   *         a successfully parsed sample ID
+   */
+  def identityFromFile(f: ExtantFile): Either[String, SampleID] = {
+    import cats.syntax.show._
+    logger.info(s"Parsing identity from file: ${f.show}")
+    val fn = f.value.getName
+    if (!fn.endsWith(readsFileExt)) { Left(s"Invalid reads file (extension must be $readsFileExt): ${f.show}") }
+    else {
+      val fields = fn.split(".").head.split("_")
+      logger.debug(s"${fields.length} fields from filename: ${fields.mkString(", ")}")
+      val minNumFields = 4
+      (fields.length < minNumFields).either(
+        s"Too few fields (got ${fields.length}, ${minNumFields} required, from ${f.show}): ${fields.mkString(", ")}", ()) flatMap {
+        _ => ???
+      }
+    }
   }
 
 }
