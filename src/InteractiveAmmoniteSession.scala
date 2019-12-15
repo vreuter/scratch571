@@ -8,7 +8,7 @@ object InteractiveAmmoniteSession {
   import cats._, cats.implicits._
   val thisJarFile = new File(s"${System.getenv("CODE")}/scratch571/target/scala-2.12/flybrain571_v0.0.1-SNAPSHOT.jar")
   interp.load.cp(ammonite.ops.Path(thisJarFile))
-  import flybrain571.Preamble
+  import flybrain571.{ Preamble, Refinement }
   interp.load.ivy("org.typelevel" % "mouse_2.12" % "0.23")
   import mouse.boolean._
   import flybrain571.DataPaths.{ findAllByExtension => findByExt }
@@ -34,5 +34,9 @@ object InteractiveAmmoniteSession {
   val dataEnvVar = "DATA"
   val dataFolder = folderFromEnvVar(dataEnvVar).fold(errMsg => throw new Exception(errMsg), identity _)
   val allDataFiles = findByExt(Preamble.readsFileExt)(new File(dataFolder, "BoniniLab"))
+  val fileByID = allDataFiles.map(f => {
+    val xf = Refinement.ExtantFile.unsafe(new File(f))
+    Preamble.idFromFile(xf) -> xf
+  })
 
 }

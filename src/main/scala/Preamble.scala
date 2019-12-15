@@ -16,7 +16,7 @@ object Preamble extends LazyLogging {
   import Refinement._, ExtantFile._
 
   // TODO: GTF for dm6 + possibly annotations
-  private[this] val readsFileExt = ".sort.bam"
+  val readsFileExt = ".sort.bam"
   private[this] val repPrefix = "Rep"
   private[this] val filenameDelimiter = "_"
   
@@ -45,7 +45,10 @@ object Preamble extends LazyLogging {
   /** Convert a {@code SampleID} to a filepath. */
   def idToFile: SampleID => File = sid => new File(s"${showSampleID.show(sid)}${readsFileExt}")
 
-  private[this] def fnFields: String => Array[String] = _.split(".").head.split(filenameDelimiter)
+  private[this] def fnFields: String => Array[String] = fn => {
+    logger.debug(s"Getting fields from filename: $fn")
+    fn.stripSuffix(readsFileExt).split(filenameDelimiter)
+  }
 
   def rawFromSS(fn: String): Either[String, RawID] = {
     val fields = fnFields(fn)
