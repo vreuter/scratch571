@@ -21,4 +21,10 @@ object Preamble extends LazyLogging {
   //private[this] val progPath = ExtantFile.unsafe(rawProgPath)
   //val mpProg = MPP(progPath)
   val mpProg = MPP()
+
+  def identityFromFile(f: ExtantFile): Either[String, SampleID] = {
+    val fn = f.value.getName
+    ???
+  }
+
 }
