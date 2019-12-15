@@ -33,6 +33,6 @@ object InteractiveAmmoniteSession {
 
   val dataEnvVar = "DATA"
   val dataFolder = folderFromEnvVar(dataEnvVar).fold(errMsg => throw new Exception(errMsg), identity _)
-  val allDataFiles = findByExt(Preamble.readsFileExt)(dataFolder)
+  val allDataFiles = findByExt(Preamble.readsFileExt)(new File(dataFolder, "BoniniLab"))
 
 }
