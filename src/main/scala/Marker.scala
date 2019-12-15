@@ -13,4 +13,8 @@ object Marker {
       case _ => false
     }
   }
+  implicit val showMark: Show[Marker] = Show.show((_: Marker) match {
+    case Mcherry => "Mcherry"
+    case Ime4 => "Ime4"
+  })
 }
