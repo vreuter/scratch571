@@ -9,19 +9,19 @@ import com.typesafe.scalalogging.LazyLogging
  */
 object Preamble extends LazyLogging {
   import java.io.File
-  import cats._, cats.syntax.show._
+  import cats._, cats.instances.int._, cats.instances.string._
+  import cats.syntax.eq._, cats.syntax.show._
   import mouse.boolean._
   import MeTPeakProgram.{ ProgramInstance => MPP }
   import Refinement._, ExtantFile._
 
   // TODO: GTF for dm6 + possibly annotations
   private[this] val readsFileExt = ".sort.bam"
-  private[this] val repNameIndex = 0
-  private[this] val ipNameIndex = 1
-  private[this] val markerNameIndex = 2
   private[this] val repPrefix = "Rep"
   private[this] val filenameDelimiter = "_"
   
+  type RawID = (String, String, String, String, String)
+
   val mpProg = MPP()
 
   /** Display a {@code SampleID} as text. */
@@ -45,6 +45,31 @@ object Preamble extends LazyLogging {
   /** Convert a {@code SampleID} to a filepath. */
   def idToFile: SampleID => File = sid => new File(s"${showSampleID.show(sid)}${readsFileExt}")
 
+  private[this] def fnFields: String => Array[String] = _.split(".").head.split(filenameDelimiter)
+
+  def rawFromSS(fn: String): Either[String, RawID] = {
+    val fields = fnFields(fn)
+    val maybeIpMarkPair = {
+      if (fields.size === 5) { Right(fields(1) -> fields(2)) } 
+      else if (fields.size === 6) { Right(fields(2) -> fields(3)) }
+      else { Left(s"SynSys antibody's filename should have 5 or 6 fields; got ${fields.size} from filename: $fn") }
+    }
+    maybeIpMarkPair map { case(a, b) => (Antibody.synSysAlias, a, b, fields.last, fields(0)) }
+  }
+
+  def rawFromNE(fn: String): Either[String, RawID] = {
+    val fields = fnFields(fn)
+    val fieldCount = 4
+    if (fields.size === fieldCount) { Right(Antibody.neblAlias, fields(1), fields(2), fields.last, fields(0)) }
+    else { Left(s"Required $fieldCount fields in NEBL antibody filename; got ${fields.size} from $fn") }
+  }
+
+  def readShockBool = (s: String) => {
+    if (s === "HS") Some(true)
+    else if (s === "control") Some(false)
+    else Option.empty[Boolean]
+  }
+
   /**
    * Attempt parse of a {@code SampleID} from a filepath.
    *
@@ -55,17 +80,21 @@ object Preamble extends LazyLogging {
   def idFromFile(f: ExtantFile): Either[String, SampleID] = {
     import cats.syntax.show._
     logger.info(s"Parsing identity from file: ${f.show}")
+    val abText = f.value.getParentFile.getName
     val fn = f.value.getName
-    if (!fn.endsWith(readsFileExt)) { Left(s"Invalid reads file (extension must be $readsFileExt): ${f.show}") }
-    else {
-      val fields = fn.split(".").head.split(filenameDelimiter)
-      logger.debug(s"${fields.length} fields from filename: ${fields.mkString(", ")}")
-      val minNumFields = 4
-      (fields.length < minNumFields).either(
-        s"Too few fields (got ${fields.length}, ${minNumFields} required, from ${f.show}): ${fields.mkString(", ")}", ()) flatMap {
-        _ => ???
-      }
+    val maybeRawID = {
+      if (!fn.endsWith(readsFileExt)) Left(s"Invalid reads file (extension must be $readsFileExt): ${f.show}")
+      else if (abText === Antibody.neblAlias) rawFromNE(fn)
+      else if (abText === Antibody.synSysAlias) rawFromSS(fn)
+      else Left(s"Illegal antibody text ($abText) from file: ${f.show}")
     }
+    maybeRawID flatMap { case (abStr, ipStr, markStr, condStr, repStr) => for {
+      rep <- Replicate(repStr.stripPrefix(repPrefix).toInt).toRight(s"Replicate parse of '$repStr' failed (from ${f.show})")
+      //ab <- Antibody.read(abStr, ipStr).toRight(s"Illegal antibody text '$abStr' (from ${f.show})")
+      ab <- Antibody.read(abStr, ipStr)
+      m <- Marker.read(markStr).toRight(s"Could not parse marker from text '$markStr' (from ${f.show})")
+      exp <- readShockBool(condStr).toRight(s"Could not parse shock status from text '$condStr' (from ${f.show})")
+    } yield SampleID(ab, m, exp, rep) }
   }
 
 }
