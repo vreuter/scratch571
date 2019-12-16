@@ -12,7 +12,6 @@ object Preamble extends LazyLogging {
   import cats._, cats.instances.int._, cats.instances.string._
   import cats.syntax.eq._, cats.syntax.show._
   import mouse.boolean._
-  import MeTPeakProgram.{ ProgramInstance => MPP }
   import Refinement._, ExtantFile._
 
   // TODO: GTF for dm6 + possibly annotations
@@ -21,8 +20,6 @@ object Preamble extends LazyLogging {
   private[this] val filenameDelimiter = "_"
   
   type RawID = (String, String, String, String, String)
-
-  val mpProg = MPP()
 
   /** Display a {@code SampleID} as text. */
   implicit val showSampleID: Show[SampleID] = new Show[SampleID] {
