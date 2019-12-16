@@ -10,6 +10,7 @@ import com.typesafe.scalalogging.LazyLogging
 object MeTPeakProgram extends LazyLogging {
   
   import java.io.File
+  import java.nio.file.Paths
   import cats._, cats.implicits._
   import cats.data.{ NonEmptyList => NEL }
   import Refinement._, ExtantFile._
@@ -35,10 +36,20 @@ object MeTPeakProgram extends LazyLogging {
       val files2Text = (fs: NEL[ExtantFile]) => fs.toList.map(_.show).mkString(" ")
       val ipText = files2Text(ips)
       val ctrlText = files2Text(controls)
-      //val prog = execFile.value
-      val prog = new File(this.getClass().getResource("/runMetpeak.R").toString)
-      logger.debug (s"Program path: $prog")
-      val cmd1 = s"$prog --gtf ${gtf.show} --ips $ipText --controls $ctrlText -N $name -O $outdir"
+      //val progPath = execFile.value.getPath
+      // TODO: figure out how to properly leverage this
+      //val progPath = new File(this.getClass().getResource("/runMetpeak.R").toString).getPath
+      val progPath = {
+        val progName = "runMetpeak.R"
+        val codeDir = System.getenv("CODE")
+        if (codeDir == null) progName
+        else {
+          val resDir = new File(Paths.get(codeDir, "scratch571", "src", "main", "resources").toString)
+          new File(resDir, progName).getPath
+        }
+      }
+      logger.debug(s"Program path: $progPath")
+      val cmd1 = s"$progPath --gtf ${gtf.show} --ips $ipText --controls $ctrlText -N $name -O $outdir"
       if (clobber) cmd1 ++ " --overwrite" else cmd1
     }
     

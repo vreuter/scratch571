@@ -7,6 +7,7 @@ object InteractiveAmmoniteSession {
   interp.load.ivy("org.typelevel" %% "cats-core" % "2.0.0")
   import cats._, cats.implicits._
   import cats.data.{ NonEmptyList => NEL }
+  import cats.syntax.list._
   val thisJarFile = new File(s"${System.getenv("CODE")}/scratch571/target/scala-2.12/flybrain571_v0.0.1-SNAPSHOT.jar")
   interp.load.cp(ammonite.ops.Path(thisJarFile))
   import flybrain571._
@@ -70,7 +71,6 @@ object InteractiveAmmoniteSession {
 
   type FileGroup = (SampleID.NonRepID, Vector[ExtantFile])
 
-  import cats.syntax.list._
   def vect2Nel[A]: Vector[A] => NEL[A] = _.toList.toNel.get
 
   val ime4NeblIpVsInputUnshockedCmd = {
