@@ -18,6 +18,9 @@ parser$add_argument("-O", "--outputFolder", required=TRUE, help="Path to folder 
 parser$add_argument("--ips", nargs="+", help="Path(s) to IP sample file(s) -- aligned BAM")
 parser$add_argument("--controls", nargs="+", help="Path(s) to control sample file(s) -- aligned BAM")
 parser$add_argument("--overwrite", action="store_true", help="Allow overwrite of existing data on disk")
+args <- parser$parse_args()
+
+message("Main output folder: ", args$outputFolder)
 
 if (!file_test("-d", args$outputFolder)) {
   message("Creating path to output folder: ", args$outputFolder)
