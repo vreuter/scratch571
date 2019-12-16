@@ -39,7 +39,9 @@ final case class SampleID(ab: Antibody, marker: Marker, hs: Boolean, rep: Replic
  */
 object SampleID {
   import scala.annotation.tailrec
-  import cats.instances.boolean._, cats.syntax.eq._, cats.syntax.show._
+  import cats.instances.boolean._
+  import cats.instances.tuple._            // For element-wise Eq derivation
+  import cats.syntax.eq._, cats.syntax.show._
   import mouse.boolean._
   import Antibody._, Marker._
   import Zpos._
@@ -64,7 +66,6 @@ object SampleID {
 
   @tailrec
   private[this] def findRepGroup(groups: Vector[NonRepID])(subID: NonRepID, currIndex: Int): Option[Int] = {
-    import cats.instances.tuple._            // For element-wise Eq derivation
     if (groups.isEmpty) Option.empty[Int]
     else if (groups.head === subID) Some(currIndex)
     else findRepGroup(groups.tail)(subID, currIndex + 1)
@@ -79,5 +80,9 @@ object SampleID {
       }
     }
   }
+
+  def groupReplicateData[V]: Iterable[(SampleID, V)] => Vector[(NonRepID, Vector[V])] = 
+    data => groupReplicates(data.map(_._1)) map { 
+      case (id, _) => id -> data.toVector.filter(_._1.nonRepID === id).map(_._2) }
 
 }
