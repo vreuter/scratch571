@@ -28,6 +28,8 @@ final case class SampleID(ab: Antibody, marker: Marker, hs: Boolean, rep: Replic
   def replicate = rep.get
   def hasHeatShock = hs
   def antibody = ab
+  def nonRepID: (Antibody, Marker, Boolean) = (ab, marker, hs)
+
 }
 
 /**
@@ -36,10 +38,13 @@ final case class SampleID(ab: Antibody, marker: Marker, hs: Boolean, rep: Replic
  * @author Vince Reuter
  */
 object SampleID {
+  import scala.annotation.tailrec
   import cats.instances.boolean._, cats.syntax.eq._, cats.syntax.show._
   import mouse.boolean._
   import Antibody._, Marker._
   import Zpos._
+
+  type NonRepID = (Antibody, Marker, Boolean)
 
   /**
    * Determine whether two sample IDs are replicates.
@@ -56,4 +61,23 @@ object SampleID {
       } else { false }
     }
   }
+
+  @tailrec
+  private[this] def findRepGroup(groups: Vector[NonRepID])(subID: NonRepID, currIndex: Int): Option[Int] = {
+    import cats.instances.tuple._            // For element-wise Eq derivation
+    if (groups.isEmpty) Option.empty[Int]
+    else if (groups.head === subID) Some(currIndex)
+    else findRepGroup(groups.tail)(subID, currIndex + 1)
+  }
+
+  def groupReplicates = (samples: Iterable[SampleID]) => samples.foldRight(Vector.empty[(NonRepID, Vector[SampleID])]){
+    case (sid, acc) => findRepGroup(acc.map(_._1))(sid.nonRepID, 0) match {
+      case None => (acc :+ (sid.nonRepID -> Vector(sid)))
+      case Some(i) => {
+        val (subSID, prevGroup) = acc(i)
+        acc.patch(i, Vector((subSID, (prevGroup :+ sid))), 1)
+      }
+    }
+  }
+
 }
