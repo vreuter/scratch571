@@ -36,7 +36,7 @@ object InteractiveAmmoniteSession {
   val dataEnvVar = "DATA"
   val dataFolder = unsafe(folderFromEnvVar)(dataEnvVar)
   val allDataFiles = findByExt(Preamble.readsFileExt)(new File(dataFolder, "BoniniLab"))
-  val fileByID = allDataFiles.map(f => {
+  val fileByID = allDataFiles.toVector.map(f => {
     val xf = Refinement.ExtantFile.unsafe(new File(f))
     unsafe(Preamble.idFromFile)(xf) -> xf
   })
