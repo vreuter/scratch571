@@ -15,7 +15,7 @@ object Preamble extends LazyLogging {
   import Refinement._, ExtantFile._
 
   // TODO: GTF for dm6 + possibly annotations
-  val readsFileExt = ".sort.bam"
+  val readsFileExt = ".sort.rmdup.bam"
   private[this] val repPrefix = "Rep"
   private[this] val filenameDelimiter = "_"
   
