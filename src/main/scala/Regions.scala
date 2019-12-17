@@ -4,8 +4,9 @@ import com.typesafe.scalalogging.StrictLogging
 
 object Regions extends StrictLogging {
   
-  import java.io.File
+  import java.io.{ BufferedWriter, File, FileWriter }
   import scala.io.Source
+  import cats.data.{ NonEmptyList => NEL }
   import mouse.boolean._
   import FastaTools._, Refinement.{ ExtantFile }
   
@@ -13,15 +14,13 @@ object Regions extends StrictLogging {
    * Parse pairs of geneID and coordinates from BED.
    *
    * @param bed The BED to parse
-   * @return sequence of pairs of geneID ({@code name} field of BED per {@code MeTPeak}) and coordinates (0-based, incl/excl)
    */
-  def regionsFromBed = (bed: ExtantFile) => Source.fromFile(bed.value).getLines.foldLeft(Vector.empty[(String, Range)]){
-    case (recs, line) => {
+  def regionsFromBed = (bed: ExtantFile) => Source.fromFile(bed.value).getLines.foldLeft(
+    Vector.empty[(String, Range, String)]){ case (recs, line) => {
       val fields = line.split("\t")
-      val newRec = fields(3) -> (fields(1).toInt -> fields(2).toInt)
+      val newRec = (fields(0), (fields(1).toInt -> fields(2).toInt), fields(3))
       recs :+ newRec
-    }
-  }
+    } }
 
   def readRegionsFile(f: ExtantFile, geneIdIndex: Int = 0, sep: String = "\t"): Vector[(String, Range)] = {
     Source.fromFile(f.value).getLines.foldLeft(Vector.empty[(String, Range)]){ case (recs, line) => {
@@ -41,22 +40,37 @@ object Regions extends StrictLogging {
     } }
   }
 
-  def sequenceRegions(fasta: ExtantFile)(bed: ExtantFile): Either[String, Vector[(String, Range, String)]] = {
-    logger.info(s"Associating regions from ${bed.value} using sequences from ${fasta.value} ")
-    logger.debug("Building sequence map")
+  def addSeq2Regions(fasta: ExtantFile)(beds: NEL[ExtantFile]): Either[String, NEL[ExtantFile]] = {
+    logger.info(s"Building sequence map from FASTA: ${fasta.value}")
     val seqMap = fbFasta2TranscriptExonSeqMap(fasta)
-    logger.debug("Sequence map complete")
+    logger.info("Sequence map complete")
     val getSeq = regionSeq(seqMap) _
-    logger.debug("Starting region processing")
-    val (errors, result) = regionsFromBed(bed).foldLeft(
-      Vector.empty[String] -> Vector.empty[(String, Range, String)] ){ 
-        case ((bads, goods), (id, range)) => 
-          getSeq(id, range).fold(
-            errMsg => (bads :+ errMsg, goods), 
-            seq => (bads, goods :+ (id, range, seq)))
-      }
-    logger.debug("Region processing complete")
-    errors.isEmpty.either(s"${errors.size} error(s); max 5: ${errors.take(5).mkString("\n")}", result)
+    logger.info("Starting region processing")
+    Right( beds map { b => {
+      logger.info(s"Using BED: ${b.value}")
+      val (errors, result) = regionsFromBed(b).foldLeft(
+        Vector.empty[String] -> Vector.empty[(String, Range, String, String)] ){ 
+          case ((bads, goods), (chr, range, id)) => 
+            getSeq(id, range).fold(
+              errMsg => (bads :+ errMsg, goods), 
+              seq => (bads, goods :+ (chr, range, id, seq)))
+        }
+      logger.info(s"Region processing complete for ${b.value}")
+      if (errors.isEmpty) {
+        val outfile = new File(b.value.getPath.replaceAllLiterally(".bed", ".seq"))
+        logger.info(s"Writing result from ${b.value}: ${outfile}")
+        val w = new BufferedWriter(new FileWriter(outfile))
+        try { result foreach { case (chr, (start, end), id, seq) => {
+          val fields = List(chr, start.toString, end.toString, id, seq)
+          w.write(fields.mkString("\t"))
+          w.newLine()
+        } } }
+        finally { w.close() }
+        logger.info(s"Write complete: ${outfile}")
+        ExtantFile.unsafe(outfile)
+      } else { throw new Exception(s"${errors.size} error(s); max 5: ${errors.take(5).mkString("\n")}") }
+    } } )
+    
   }
 
 }
