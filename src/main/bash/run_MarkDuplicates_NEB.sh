@@ -1,3 +1,4 @@
+#!/bin/bash
 java -jar /home/vr/software/picard.jar MarkDuplicates I=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_control.sort.bam O=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_control.sort.dedup.bam M=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_control.sort.dedup_metrics.txt
 java -jar /home/vr/software/picard.jar MarkDuplicates I=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_HS.sort.bam O=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_HS.sort.dedup.bam M=/home/vr/data/BoniniLab/NEB_Antibody/Rep3_Input_Mcherry_HS.sort.dedup_metrics.txt
 java -jar /home/vr/software/picard.jar MarkDuplicates I=/home/vr/data/BoniniLab/NEB_Antibody/Rep1_Input_Mcherry_HS.sort.bam O=/home/vr/data/BoniniLab/NEB_Antibody/Rep1_Input_Mcherry_HS.sort.dedup.bam M=/home/vr/data/BoniniLab/NEB_Antibody/Rep1_Input_Mcherry_HS.sort.dedup_metrics.txt
