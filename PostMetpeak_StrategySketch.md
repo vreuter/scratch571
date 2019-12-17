@@ -13,5 +13,5 @@
 3. Determine base-level coverage from pooled evidence set used to generate peak calls, for peak call set.
 4. Model prior probability of m<sup>6</sup>A at each `A` in the sequence for each peak (discard peak if no `A` is present)
 5. Update prior probability according to base-level data/evidence from reads.
-6. Emit estimates
+6. Emit estimates of base-level methylation probability (per `A` per peak)
 
