@@ -43,8 +43,11 @@ object Regions extends StrictLogging {
 
   def sequenceRegions(fasta: ExtantFile)(bed: ExtantFile): Either[String, Vector[(String, Range, String)]] = {
     logger.info(s"Associating regions from ${bed.value} using sequences from ${fasta.value} ")
+    logger.debug("Building sequence map")
     val seqMap = fbFasta2TranscriptExonSeqMap(fasta)
+    logger.debug("Sequence map complete")
     val getSeq = regionSeq(seqMap) _
+    logger.debug("Starting region processing")
     val (errors, result) = regionsFromBed(bed).foldLeft(
       Vector.empty[String] -> Vector.empty[(String, Range, String)] ){ 
         case ((bads, goods), (id, range)) => 
@@ -52,6 +55,7 @@ object Regions extends StrictLogging {
             errMsg => (bads :+ errMsg, goods), 
             seq => (bads, goods :+ (id, range, seq)))
       }
+    logger.debug("Region processing complete")
     errors.isEmpty.either(s"${errors.size} error(s); max 5: ${errors.take(5).mkString("\n")}", result)
   }
 
