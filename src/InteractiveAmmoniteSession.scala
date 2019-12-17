@@ -2,7 +2,7 @@ package flybrain571
 
 object InteractiveAmmoniteSession {
   
-  import java.io.File
+  import java.io.{ BufferedWriter, File, FileWriter }
   import java.nio.file.Paths
   interp.load.ivy("org.typelevel" %% "cats-core" % "2.0.0")
   import cats._, cats.implicits._
@@ -57,13 +57,16 @@ object InteractiveAmmoniteSession {
   val procEnvVar = "PROCESSED"
   val resFolder = new File(unsafe(folderFromEnvVar)(procEnvVar), "BoniniLab")
 
-  def metpeakCommand(name: String, ips: NEL[ExtantFile], ctrls: NEL[ExtantFile]): String = {
+  def metpeakCommand(name: String, ips: NEL[ExtantFile], ctrls: NEL[ExtantFile], subfolderName: String): String = {
     val prog = MPP()
-    prog.getCmd(gtfPath)(ips, ctrls)(resFolder, name, clobber = true)
+    val outdir = new File(resFolder, subfolderName)
+    prog.getCmd(gtfPath)(ips, ctrls)(outdir, name, clobber = true)
   }
 
   val neblIme4 = neRepGroups.filter(_._1._2 === Ime4)
   val neblMcherry = neRepGroups.filter(_._1._2 === Mcherry)
+  val ssIme4 = ssRepGroups.filter(_._1._2 === Ime4)
+  val ssMcherry = ssRepGroups.filter(_._1._2 === Mcherry)
 
   def getExactlyOne[A](p: A => Boolean)(xs: Iterable[A]): A = xs.toList.filter(p) match {
     case a :: Nil => a
@@ -81,32 +84,98 @@ object InteractiveAmmoniteSession {
     } )
   }
 
+  def findSynSys(abIpKind: Option[Boolean], useShock: Boolean): Iterable[FileGroup] => FileGroup = { 
+    getExactlyOne( (idWithFiles: FileGroup) => {
+      idWithFiles._1 match { case (ab, _, exp) => 
+        ab === SynSys(abIpKind) && useShock.fold(exp, !exp) }
+    } )
+  }
+
   val ime4NeblIpVsInputUnshockedCmd = {
     val ipFiles = vect2Nel(findNebl(true, false)(neblIme4)._2)
     val ctrlFiles = vect2Nel(findNebl(false, false)(neblIme4)._2)
-    metpeakCommand("Ime4_vs_Input_Control", ipFiles, ctrlFiles)
+    metpeakCommand("Ime4_vs_Input_Control", ipFiles, ctrlFiles, Antibody.neblAlias)
   }
-  // TODO: can run this, but be careful -- long-running and effectful.
 
   val mcherryNeblIPVsInputUnshockedCmd = {
     val ipFiles = vect2Nel(findNebl(true, false)(neblMcherry)._2)
     val ctrlFiles = vect2Nel(findNebl(false, false)(neblMcherry)._2)
-    metpeakCommand("Mcherry_vs_Input_Control", ipFiles, ctrlFiles)
+    metpeakCommand("Mcherry_vs_Input_Control", ipFiles, ctrlFiles, Antibody.neblAlias)
   }
-  // TODO: can run this, but be careful -- long-running and effectful.
 
   val ime4NeblIpVsInputShockedCmd = {
     val ipFiles = vect2Nel(findNebl(true, true)(neblIme4)._2)
     val ctrlFiles = vect2Nel(findNebl(false, true)(neblIme4)._2)
-    metpeakCommand("Ime4_vs_Input_HS", ipFiles, ctrlFiles)
+    metpeakCommand("Ime4_vs_Input_HS", ipFiles, ctrlFiles, Antibody.neblAlias)
   }
-  // TODO: can run this, but be careful -- long-running and effectful.
 
   val mcherryNeblIPVsInputShockedCmd = {
     val ipFiles = vect2Nel(findNebl(true, true)(neblMcherry)._2)
     val ctrlFiles = vect2Nel(findNebl(false, true)(neblMcherry)._2)
-    metpeakCommand("Mcherry_vs_Input_HS", ipFiles, ctrlFiles)
+    metpeakCommand("Mcherry_vs_Input_HS", ipFiles, ctrlFiles, Antibody.neblAlias)
   }
-  // TODO: can run this, but be careful -- long-running and effectful.
+
+  val ime4SynSysIpVsInputUnshockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), false)(ssIme4)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Some(false), false)(ssIme4)._2)
+    metpeakCommand("Ime4_vs_Input_Control", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val ime4SynSysIpVsNegativeUnshockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), false)(ssIme4)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Option.empty[Boolean], false)(ssIme4)._2)
+    metpeakCommand("Ime4_vs_Negative_Control", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val mcherrySynSysIpVsInputUnshockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), false)(ssMcherry)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Some(false), false)(ssMcherry)._2)
+    metpeakCommand("Mcherry_vs_Input_Control", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val mcherrySynSysIpVsNegativeUnshockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), false)(ssMcherry)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Option.empty[Boolean], false)(ssMcherry)._2)
+    metpeakCommand("Mcherry_vs_Negative_Control", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val ime4SynSysIpVsInputShockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), true)(ssIme4)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Some(false), true)(ssIme4)._2)
+    metpeakCommand("Ime4_vs_Input_HS", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val ime4SynSysIpVsNegativeShockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), true)(ssIme4)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Option.empty[Boolean], true)(ssIme4)._2)
+    metpeakCommand("Ime4_vs_Negative_HS", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val mcherrySynSysIpVsInputShockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), true)(ssMcherry)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Some(false), true)(ssMcherry)._2)
+    metpeakCommand("Mcherry_vs_Input_HS", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val mcherrySynSysIpVsNegativeShockedCmd = {
+    val ipFiles = vect2Nel(findSynSys(Some(true), true)(ssMcherry)._2)
+    val ctrlFiles = vect2Nel(findSynSys(Option.empty[Boolean], true)(ssMcherry)._2)
+    metpeakCommand("Mcherry_vs_Negative_HS", ipFiles, ctrlFiles, Antibody.synSysAlias)
+  }
+
+  val runMetpeakSynSysSamplesScript = {
+    val script = new File(resFolder, s"runMP_SynSysSamples.sh")
+    val w = new BufferedWriter(new FileWriter(script))
+    val cmds = List(
+      ime4SynSysIpVsInputUnshockedCmd, ime4SynSysIpVsNegativeUnshockedCmd, 
+      mcherrySynSysIpVsInputUnshockedCmd, mcherrySynSysIpVsNegativeUnshockedCmd, 
+      ime4SynSysIpVsInputShockedCmd, ime4SynSysIpVsNegativeShockedCmd, 
+      mcherrySynSysIpVsInputShockedCmd, mcherrySynSysIpVsNegativeShockedCmd
+    )
+    val lines = "#!/bin/bash" :: cmds
+    try { lines foreach { l => { w.write(l); w.newLine(); w.newLine() } } }
+    finally { w.close() }
+    script
+  }
 
 }
