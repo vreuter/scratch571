@@ -4,4 +4,5 @@ project/
 !project/build.properties
 !project/plugins.sbt
 !project/assembly.sbt
+lib/
 
