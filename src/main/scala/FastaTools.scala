@@ -15,10 +15,19 @@ object FastaTools {
   type Range = (Int, Int)
   type FastaExonMap = Map[String, Vector[FbFastaExon]]
 
+  /**
+   * Represent exon data from a FlyBase FASTA.
+   *
+   * @param geneID Record's gene identifier/key
+   * @param range Record coordinate interval
+   * @param seq Record nucleotide sequence
+   * @return new record representation instance
+   */
   final case class FbFastaExon(geneID: String, range: Range, seq: String) {
     def contains = (maybeSubRange: Range) => maybeSubRange._1 >= range._1 && maybeSubRange._2 <= range._2
   }
   
+  /** Parse a FlyBase FASTA file to a collection of pairs of record header and sequence. */
   def parseFbFasta: ExtantFile => Vector[(String, String)] = fasta => {
     @tailrec
     def go(lines: Vector[String], acc: Vector[(String, String)]): Vector[(String, String)] = {
@@ -34,6 +43,12 @@ object FastaTools {
     go(Source.fromFile(fasta.value).getLines.toVector, Vector.empty[(String, String)])
   }
 
+  /**
+   * Read FlyBase FASTA into mapping from gene ID to collection of exon records
+   *
+   * @param fasta The file to parse
+   * @return mapping from gene ID to collection of representations of exon records
+   */
   def fbFasta2TranscriptExonSeqMap(fasta: ExtantFile): Map[String, Vector[FbFastaExon]] = {
     parseFbFasta(fasta).foldLeft(Map.empty[String, Vector[FbFastaExon]]){
       case (accMap, (head, seq)) => {
@@ -50,6 +65,14 @@ object FastaTools {
     }
   }
 
+  /**
+   * Determine the nucleotide sequence of an arbitrary region.
+   *
+   * @param exonsByGene mapping from gene ID to collection of associated exon record representations
+   * @param geneID gene ID of the region for which to get sequence
+   * @param range coordinate interval for which to get sequence
+   * @return Either a {@code Left} with explanatory error message, or a {@code Right} with the sequence
+   */
   def regionSeq(exonsByGene: FastaExonMap)(geneID: String, range: Range): Either[String, String] = 
     exonsByGene.get(geneID).toRight(s"Gene ID not found: $geneID") flatMap {
       _.filter(_.contains(range)).toList match {
