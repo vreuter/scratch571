@@ -95,4 +95,18 @@ object InteractiveAmmoniteSession {
   }
   // TODO: can run this, but be careful -- long-running and effectful.
 
+  val ime4NeblIpVsInputShockedCmd = {
+    val ipFiles = vect2Nel(findNebl(true, true)(neblIme4)._2)
+    val ctrlFiles = vect2Nel(findNebl(false, true)(neblIme4)._2)
+    metpeakCommand("Ime4_vs_Input_HS", ipFiles, ctrlFiles)
+  }
+  // TODO: can run this, but be careful -- long-running and effectful.
+
+  val mcherryNeblIPVsInputShockedCmd = {
+    val ipFiles = vect2Nel(findNebl(true, true)(neblMcherry)._2)
+    val ctrlFiles = vect2Nel(findNebl(false, true)(neblMcherry)._2)
+    metpeakCommand("Mcherry_vs_Input_HS", ipFiles, ctrlFiles)
+  }
+  // TODO: can run this, but be careful -- long-running and effectful.
+
 }
