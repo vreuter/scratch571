@@ -20,6 +20,10 @@ object InteractiveTestSeqRegions {
   val regFile = ExtantFile.unsafe(new File(Paths.get(
     s"${System.getenv("HOME")}", "BoniniLab", Antibody.neblAlias, "Ime4_vs_Input_HS.peak.bed").toString))
 
-  val oneRes = Regions.addSeq2Regions(exonsFasta)(NEL(regFile, Nil))
+  val faRecs = FastaTools.parseFbFasta(exonsFasta)
+
+  val recsByGeneID = FastaTools.faRecords2ExonSeqMap(faRecs)
+
+  //val oneRes = Regions.addSeq2Regions(exonsFasta)(NEL(regFile, Nil))
 
 }
