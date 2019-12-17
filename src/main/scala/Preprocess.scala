@@ -2,6 +2,11 @@ package flybrain571
 
 import com.typesafe.scalalogging.StrictLogging
 
+/**
+ * Preprocessing utilities
+ *
+ * @author Vince Reuter
+ */
 object Preprocess extends StrictLogging {
   import java.io.{ BufferedWriter, File, FileWriter }
   import cats.instances.either._, cats.instances.string._
@@ -11,6 +16,12 @@ object Preprocess extends StrictLogging {
   private[this] val bamSuffix = ".bam"
   val dedupSuffix = s".dedup$bamSuffix"
   
+  /**
+   * Call for command to remove duplicates with {@code Picard} and then index with {@code samtools}.
+   *
+   * @param f The alignment file from which duplicates should be removed.
+   * @return Either a {@code Left} with an error message or a {@code Right} with a pair of commands
+   */
   def rmdupAndIndexCmd(f: ExtantFile): Either[String, (String, String)] = {
     require(f.value.getName.endsWith(bamSuffix))
     logger.info(s"Using BAM: ${f.show}")
