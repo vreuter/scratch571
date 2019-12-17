@@ -23,7 +23,8 @@ object Preprocess extends StrictLogging {
       ExtantFile(picardJar).bimap(
         _ => s"Picard path isn't a file: $picardPath", 
         _ => {
-          val dedupCmd = s"java -jar $picardPath MarkDuplicates I=${f.value} O=${outfile}"
+          val getMetricsPath = (_: File).getPath.replaceAllLiterally(dedupSuffix, ".dedup_metrics.txt")
+          val dedupCmd = s"java -jar $picardPath MarkDuplicates I=${f.value} O=${outfile} M=${getMetricsPath(outfile)}"
           val indexCmd = s"samtools index $outfile"
           dedupCmd -> indexCmd
         }
