@@ -13,8 +13,11 @@ object FastaTools {
   import Refinement.ExtantFile
   
   type Range = (Int, Int)
-  
-  final case class FbFastaExon(geneID: String, range: Range, seq: String)
+  type FastaExonMap = Map[String, Vector[FbFastaExon]]
+
+  final case class FbFastaExon(geneID: String, range: Range, seq: String) {
+    def contains = (maybeSubRange: Range) => maybeSubRange._1 >= range._1 && maybeSubRange._2 <= range._2
+  }
   
   def parseFbFasta: ExtantFile => Vector[(String, String)] = fasta => {
     @tailrec
@@ -46,5 +49,13 @@ object FastaTools {
       }
     }
   }
+
+  def regionSeq(exonsByGene: FastaExonMap)(geneID: String, range: Range): Either[String, String] = 
+    exonsByGene.get(geneID).toRight(s"Gene ID not found: $geneID") flatMap {
+      _.filter(_.contains(range)).toList match {
+        case e :: Nil => Right(e.seq)
+        case containers => Left(s"${containers.size} exon(s) containing $range for gene $geneID")
+      }
+    }
 
 }
