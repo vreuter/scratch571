@@ -55,7 +55,7 @@ object FastaTools {
         val rawFields = head.split("; ")
         // First field is of form <geneID>:<exon-num> type=exon
         val geneID = rawFields(0).split(" ")(0).split(":")(0)
-        val range = rawFields(1).split(":")(1).split("..").toList match {
+        val range = rawFields(1).split(":")(1).split("\\..").toList match {
           case start :: end :: Nil => start.toInt -> end.toInt
           case _ => throw new Exception(s"Could not parse coordinates from record header: $head")
         }

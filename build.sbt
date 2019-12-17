@@ -1,5 +1,5 @@
 name := "flybrain571"
-version := "0.0.2"
+version := "0.0.2.1"
 scalaVersion := "2.12.9"
 organization := "vreuter"
 
