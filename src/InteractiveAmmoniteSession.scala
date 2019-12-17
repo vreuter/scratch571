@@ -8,7 +8,7 @@ object InteractiveAmmoniteSession {
   import cats._, cats.implicits._
   import cats.data.{ NonEmptyList => NEL }
   import cats.syntax.list._
-  val thisJarFile = new File(s"${System.getenv("CODE")}/scratch571/target/scala-2.12/flybrain571_v0.0.1-SNAPSHOT.jar")
+  val thisJarFile = new File(s"${System.getenv("CODE")}/scratch571/target/scala-2.12/flybrain571_v0.0.2-SNAPSHOT.jar")
   interp.load.cp(ammonite.ops.Path(thisJarFile))
   import flybrain571._
   import Refinement.ExtantFile
