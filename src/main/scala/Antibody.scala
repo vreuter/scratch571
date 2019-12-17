@@ -14,19 +14,6 @@ object Antibody {
   val ssNegText = "Negative"
   val ssPosText = "Positive"
   
-  private[this] def readNeblIP(s: String): Either[String, Boolean] = s match {
-    case `inputTreatmentText` => Right(false)
-    case `neblPosText` => Right(true)
-    case _ => Left(s"Invalid NEBL antibody IP text: $s")
-  }
-
-  private[this] def readSynSysIP(s: String): Either[String, Option[Boolean]] = s match {
-    case `inputTreatmentText` => Right(Option.empty[Boolean])
-    case `ssNegText` => Right(Some(false))
-    case `ssPosText` => Right(Some(true))
-    case _ => Left(s"Invalid SS antibody IP text: $s")
-  }
-
   implicit val eqAB: Eq[Antibody] = new Eq[Antibody] {
     import cats.instances.boolean._, cats.syntax.eq._
     def eqv(a: Antibody, b: Antibody): Boolean = (a, b) match {
@@ -49,6 +36,19 @@ object Antibody {
     case `neblAlias` => readNeblIP(ipText).map(ip => Nebl(ip))
     case `synSysAlias` => readSynSysIP(ipText).map(ipOpt => SynSys(ipOpt))
     case _ => Left(s"Invalid antibody text: $abText")
+  }
+
+  private[this] def readNeblIP(s: String): Either[String, Boolean] = s match {
+    case `inputTreatmentText` => Right(false)
+    case `neblPosText` => Right(true)
+    case _ => Left(s"Invalid NEBL antibody IP text: $s")
+  }
+
+  private[this] def readSynSysIP(s: String): Either[String, Option[Boolean]] = s match {
+    case `inputTreatmentText` => Right(Option.empty[Boolean])
+    case `ssNegText` => Right(Some(false))
+    case `ssPosText` => Right(Some(true))
+    case _ => Left(s"Invalid SS antibody IP text: $s")
   }
 
 }
