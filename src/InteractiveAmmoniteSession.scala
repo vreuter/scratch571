@@ -63,6 +63,7 @@ object InteractiveAmmoniteSession {
   }
 
   val neblIme4 = neRepGroups.filter(_._1._2 === Ime4)
+  val neblMcherry = neRepGroups.filter(_._1._2 === Mcherry)
 
   def getExactlyOne[A](p: A => Boolean)(xs: Iterable[A]): A = xs.toList.filter(p) match {
     case a :: Nil => a
@@ -73,13 +74,25 @@ object InteractiveAmmoniteSession {
 
   def vect2Nel[A]: Vector[A] => NEL[A] = _.toList.toNel.get
 
+  def findNebl(useIP: Boolean, useShock: Boolean): Iterable[FileGroup] => FileGroup = { 
+    getExactlyOne( (idWithFiles: FileGroup) => {
+      idWithFiles._1 match { case (ab, _, exp) => 
+        ab === Nebl(useIP) && useShock.fold(exp, !exp) }
+    } )
+  }
+
   val ime4NeblIpVsInputUnshockedCmd = {
-    val find: Boolean => (Iterable[FileGroup] => FileGroup) = p => {
-      getExactlyOne( (idWithFiles: FileGroup) => 
-        idWithFiles._1 match { case (ab, _, exp) => ab === Nebl(p) && !exp } )
-    }
-    val (ipFiles, ctrlFiles) = vect2Nel(find(true)(neblIme4)._2) -> vect2Nel(find(false)(neblIme4)._2)
+    val ipFiles = vect2Nel(findNebl(true, false)(neblIme4)._2)
+    val ctrlFiles = vect2Nel(findNebl(false, false)(neblIme4)._2)
     metpeakCommand("Ime4_vs_Input_Control", ipFiles, ctrlFiles)
   }
+  // TODO: can run this, but be careful -- long-running and effectful.
+
+  val mcherryNeblIPVsInputUnshockedCmd = {
+    val ipFiles = vect2Nel(findNebl(true, false)(neblMcherry)._2)
+    val ctrlFiles = vect2Nel(findNebl(false, false)(neblMcherry)._2)
+    metpeakCommand("Mcherry_vs_Input_Control", ipFiles, ctrlFiles)
+  }
+  // TODO: can run this, but be careful -- long-running and effectful.
 
 }
