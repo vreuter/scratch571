@@ -32,6 +32,7 @@ object Preprocess extends StrictLogging {
     }
   }
 
+  /*
   def writeDedupAndIndexScript(script: File, rmdup: String, index: String): File = {
     val dstDir = script.getParentFile
     if (dstDir != null && dstDir.getPath =!= "" && !dstDir.isDirectory) {
@@ -44,5 +45,6 @@ object Preprocess extends StrictLogging {
     finally { w.close() }
     script
   }
+  */
 
 }
