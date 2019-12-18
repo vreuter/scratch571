@@ -11,6 +11,7 @@ library("argparse")
 library("R.utils")
 library("MeTPeak")
 
+# CLI definition and parsing
 parser <- ArgumentParser()
 parser$add_argument("-A", "--gtf", required=TRUE, help="Path to transcript annotation file to use")
 parser$add_argument("-N", "--name", required=TRUE, help="Name for the 'experiment' being analyzed")
@@ -22,11 +23,13 @@ args <- parser$parse_args()
 
 message("Main output folder: ", args$outputFolder)
 
+# Handle output folder creation as necessary
 if (!file_test("-d", args$outputFolder)) {
   message("Creating path to output folder: ", args$outputFolder)
   R.utils::mkdirs(args$outputFolder)
 } else if (!args$overwrite) { stop("Output folder exists and overwriting was not specified") }
 
+# Note that the experiment name will determine subfolder within main OUTPUT_DIR.
 metpeak(
   GENE_ANNO_GTF = args$gtf, 
   IP_BAM = args$ips, INPUT_BAM = args$controls, 

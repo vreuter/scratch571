@@ -12,8 +12,13 @@ object FastaTools {
   import cats.data.{ NonEmptyList => NEL }
   import Refinement.ExtantFile
   
+  /** Coordinate bounds for a genome interval */
   type Range = (Int, Int)
+
+  /** Group of exon representations with the same gene ID */
   type FastaExonMap = Map[String, Vector[FbFastaExon]]
+
+  /** FASTA header and sequence pair */
   type FaParseRes = Vector[(String, String)]
 
   /**
@@ -55,6 +60,7 @@ object FastaTools {
     FbFastaExon(geneID, range, seq)
   }
 
+  /** Group record representations by geneID. */
   def faRecords2ExonSeqMap: FaParseRes => Map[String, Vector[FbFastaExon]] = 
     _ map { case (head, seq) => rec2ExonRepr(head, seq) } groupBy(_.geneID)
 

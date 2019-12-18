@@ -3,7 +3,7 @@ package flybrain571
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * Project-specific data and such
+ * More context-/project-specific data and such
  *
  * @author Vince Reuter
  */
@@ -19,6 +19,7 @@ object Preamble extends LazyLogging {
   private[this] val repPrefix = "Rep"
   private[this] val filenameDelimiter = "_"
   
+  // Text fields parsed from filepath used for notion of sample identity.
   type RawID = (String, String, String, String, String)
 
   /** Display a {@code SampleID} as text. */
@@ -47,6 +48,7 @@ object Preamble extends LazyLogging {
     fn.stripSuffix(readsFileExt).split(filenameDelimiter)
   }
 
+  // Parse the raw ID fields from a Synaptic Sysmte antibody sample's BAM filepath.
   def rawFromSS(fn: String): Either[String, RawID] = {
     val fields = fnFields(fn)
     val maybeIpMarkPair = {
@@ -57,6 +59,7 @@ object Preamble extends LazyLogging {
     maybeIpMarkPair map { case(a, b) => (Antibody.synSysAlias, a, b, fields.last, fields(0)) }
   }
 
+  // Parse the raw ID fields from a NEBL antibody sample's BAM filepath.
   def rawFromNE(fn: String): Either[String, RawID] = {
     val fields = fnFields(fn)
     val fieldCount = 4
@@ -64,6 +67,7 @@ object Preamble extends LazyLogging {
     else { Left(s"Required $fieldCount fields in NEBL antibody filename; got ${fields.size} from $fn") }
   }
 
+  // Use a sample's BAM filepath to determine whether it was heat-shocked.
   def readShockBool = (s: String) => {
     if (s === "HS") Some(true)
     else if (s === "control") Some(false)

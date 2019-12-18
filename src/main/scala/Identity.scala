@@ -46,6 +46,7 @@ object SampleID {
   import Antibody._, Marker._
   import Zpos._
 
+  /** Parts of sample identity constitution independent of replicate index */
   type NonRepID = (Antibody, Marker, Boolean)
 
   /**
@@ -64,13 +65,7 @@ object SampleID {
     }
   }
 
-  @tailrec
-  private[this] def findRepGroup(groups: Vector[NonRepID])(subID: NonRepID, currIndex: Int): Option[Int] = {
-    if (groups.isEmpty) Option.empty[Int]
-    else if (groups.head === subID) Some(currIndex)
-    else findRepGroup(groups.tail)(subID, currIndex + 1)
-  }
-
+  /** Group samples with the same identity, save for replicate index. */
   def groupReplicates = (samples: Iterable[SampleID]) => samples.foldRight(Vector.empty[(NonRepID, Vector[SampleID])]){
     case (sid, acc) => findRepGroup(acc.map(_._1))(sid.nonRepID, 0) match {
       case None => (acc :+ (sid.nonRepID -> Vector(sid)))
@@ -81,8 +76,17 @@ object SampleID {
     }
   }
 
+  /** Group some value type associated with a sample ID by ID. */
   def groupReplicateData[V]: Iterable[(SampleID, V)] => Vector[(NonRepID, Vector[V])] = 
     data => groupReplicates(data.map(_._1)) map { 
       case (id, _) => id -> data.toVector.filter(_._1.nonRepID === id).map(_._2) }
+
+
+  @tailrec
+  private[this] def findRepGroup(groups: Vector[NonRepID])(subID: NonRepID, currIndex: Int): Option[Int] = {
+    if (groups.isEmpty) Option.empty[Int]
+    else if (groups.head === subID) Some(currIndex)
+    else findRepGroup(groups.tail)(subID, currIndex + 1)
+  }
 
 }
