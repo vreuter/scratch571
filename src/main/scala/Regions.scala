@@ -53,7 +53,7 @@ object Regions extends StrictLogging {
           case ((bads, goods), (chr, range, id)) => 
             getSeq(id, range).fold(
               errMsg => (bads :+ errMsg, goods), 
-              seq => (bads, goods :+ (chr, range, id, seq)))
+              _.fold(bads -> goods)(seq => (bads, goods :+ (chr, range, id, seq))))
         }
       logger.info(s"Region processing complete for ${b.value}")
       if (errors.isEmpty) {

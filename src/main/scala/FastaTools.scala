@@ -81,12 +81,12 @@ object FastaTools {
    * @param range coordinate interval for which to get sequence
    * @return Either a {@code Left} with explanatory error message, or a {@code Right} with the sequence
    */
-  def regionSeq(exonsByGene: FastaExonMap)(geneID: String, range: Range): Either[String, String] = 
-    exonsByGene.get(geneID).toRight(s"Gene ID not found: $geneID") flatMap {
+  def regionSeq(exonsByGene: FastaExonMap)(geneID: String, range: Range): Either[String, Option[String]] = 
+    exonsByGene.get(geneID).toRight(s"Gene ID not found: $geneID").map(
       _.filter(_.contains(range)).toList match {
-        case e :: Nil => Right(e.seq)
-        case containers => Left(s"${containers.size} exon(s) containing $range for gene $geneID")
+        case e :: Nil => Some(e.seq)
+        case containers => Option.empty[String]
       }
-    }
+    )
 
 }
