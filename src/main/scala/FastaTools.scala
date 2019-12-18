@@ -25,7 +25,8 @@ object FastaTools {
    * @return new record representation instance
    */
   final case class FbFastaExon(geneID: String, range: Range, seq: String) {
-    def contains = (maybeSubRange: Range) => maybeSubRange._1 >= range._1 && maybeSubRange._2 <= range._2
+    // + 1 to upper bound for difference between BED and FASTA coordinates
+    def contains = (maybeSubRange: Range) => maybeSubRange._1 + 1 >= range._1 && maybeSubRange._2 <= (range._2 + 1)
   }
   
   /** Parse a FlyBase FASTA file to a collection of pairs of record header and sequence. */
