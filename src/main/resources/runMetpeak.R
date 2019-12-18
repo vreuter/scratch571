@@ -30,9 +30,6 @@ if (!file_test("-d", args$outputFolder)) {
 } else if (!args$overwrite) { stop("Output folder exists and overwriting was not specified") }
 
 # Note that the experiment name will determine subfolder within main OUTPUT_DIR.
-metpeak(
-  GENE_ANNO_GTF = args$gtf, 
-  IP_BAM = args$ips, INPUT_BAM = args$controls, 
-  EXPERIMENT_NAME = args$name, OUTPUT_DIR = args$outputFolder)
+metpeak(GENE_ANNO_GTF = args$gtf, IP_BAM = args$ips, INPUT_BAM = args$controls, EXPERIMENT_NAME = args$name, OUTPUT_DIR = args$outputFolder)
 
 message("Complete")
