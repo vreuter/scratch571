@@ -37,4 +37,9 @@ object InteractiveTestSeqRegions {
   val rawQueryResults = peakCallQueries map { case (geneID, coords) => getRegSeq(geneID, coords) }
   //val oneRes = Regions.addSeq2Regions(exonsFasta)(NEL(regFile, Nil))
 
+  rawQueryResults.size
+  rawQueryResults.count(_.isLeft)
+  rawQueryResults.count(x => x.isRight && x.right.get.isEmpty)
+  rawQueryResults.count(x => x.isRight && x.right.get.nonEmpty)
+
 }
